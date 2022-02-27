@@ -1,0 +1,462 @@
+
+openapi: 3.0.0
+info:
+  description: "UERM API Information"
+  version: 1.0.0
+  title: UERM Cloud API
+  termsOfService: https://api.uerm.edu.ph/terms/
+  contact:
+    email: it@uerm.edu.ph
+servers:
+  - url: http://localhost:3000
+    description: Local Development server
+  - url: https://api.uerm.edu.ph
+    description: Production server
+#host: http://localhost:3000
+#basePath: /v1
+components:
+  securitySchemes:
+    bearerAuth:            # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT 
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Bearer
+tags:
+- name: commons
+  description: Basic api routes eg addresses;
+- name: students
+  description: Access to students records
+- name: employees
+  description: Access to employees records
+- name: user
+  description: Access to users records
+schemes:
+- http
+- https
+paths:
+  /patients/search:
+    post:
+      produces:
+      - application/json
+      parameters:
+      - name: lastName
+        in: body
+        description: 'Patient Last Name'
+        required: true
+      - name: firstName
+        in: body
+        description: 'Patient First Name'
+        required: true
+      - name: middleName
+        in: body
+        description: 'Patient Middle Name'
+        required: true
+      responses:
+        "200":
+          description: successful operation
+        "401":
+          description: Access token is missing or invalid
+        "404":
+          description: Cannot fetch region, server error
+  /patients/info:
+    post:
+      produces:
+      - application/json
+      parameters:
+      - name: patientno
+        in: body
+        description: 'Patient Number'
+        required: true
+      responses:
+        "200":
+          description: successful operation
+        "401":
+          description: Access token is missing or invalid
+        "404":
+          description: Cannot fetch region, server error
+  /patients/consultations:
+    post:
+      produces:
+      - application/json
+      parameters:
+      - name: patientno
+        in: body
+        description: 'Patient Number'
+        required: true
+      responses:
+        "200":
+          description: successful operation
+        "401":
+          description: Access token is missing or invalid
+        "404":
+          description: Cannot fetch region, server error
+  /patients/progressNotes:
+    post:
+      produces:
+      - application/json
+      parameters:
+      - name: patientno
+        in: body
+        description: 'Patient Number'
+        required: true
+      responses:
+        "200":
+          description: successful operation
+        "401":
+          description: Access token is missing or invalid
+        "404":
+          description: Cannot fetch region, server error
+  /commons/regions:
+    get:
+      security : 
+        - bearerAuth: []
+      tags:
+      - commons
+      summary: Get the all regions
+      description: ""
+      operationId: common-regions-all
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: successful operation
+        "401":
+          description: Access token is missing or invalid
+        "404":
+          description: Cannot fetch regions, server error.
+  /commons/region/{code}:
+    get:
+      security : 
+        -  bearerAuth: []
+      tags:
+      - commons
+      summary: Get region by code
+      description: ""
+      operationId: common-region-by-code
+      produces:
+      - application/json
+      parameters:
+      - name: code
+        in: path
+        description: 'The code of the region'
+        required: true
+        type: string
+      responses:
+        "200":
+          description: successful operation
+        "401":
+          description: Access token is missing or invalid
+        "404":
+          description: Cannot fetch region, server error
+  /commons/provinces:
+    get:
+      security : 
+        -  bearerAuth: []
+      tags:
+      - commons
+      summary: Get the all provinces
+      description: ""
+      operationId: common-provinces-all
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: successful operation
+        "401":
+          description: Access token is missing or invalid
+        "404":
+          description: Cannot fetch regions, server error.
+  /commons/province/{code}:
+    get:
+      security : 
+        -  bearerAuth: []
+      tags:
+      - commons
+      summary: Get province by code
+      description: ""
+      operationId: common-province-by-code
+      produces:
+      - application/json
+      parameters:
+      - name: code
+        in: path
+        description: 'The code of the province'
+        required: true
+        type: string
+      responses:
+        "200":
+          description: successful operation
+        "401":
+          description: Access token is missing or invalid
+        "404":
+          description: Cannot fetch region, server error
+  /commons/muncities:
+    get:
+      security : 
+        -  bearerAuth: []
+      tags:
+      - commons
+      summary: Get the all municipalities and cities
+      description: ""
+      operationId: common-municity-all
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: successful operation
+        "401":
+          description: Access token is missing or invalid
+        "404":
+          description: Cannot fetch regions, server error.
+  /commons/muncity/{code}:
+    get:
+      security : 
+        -  bearerAuth: []
+      tags:
+      - commons
+      summary: Get municipality or cities by code
+      description: ""
+      operationId: common-municity-by-code
+      produces:
+      - application/json
+      parameters:
+      - name: code
+        in: path
+        description: 'The code of the city or municipality'
+        required: true
+        type: string
+      responses:
+        "200":
+          description: successful operation
+        "401":
+          description: Access token is missing or invalid
+        "404":
+          description: Cannot fetch region, server error
+  /students/info/{sn}:
+    get:
+      security : 
+        -  bearerAuth: []
+      tags:
+      - students
+      summary: Get student info by sn
+      description: ""
+      operationId: student-info-by-sn
+      produces:
+      - application/json
+      parameters:
+      - name: sn
+        in: path
+        description: 'The student number'
+        required: true
+        type: string
+      responses:
+        "200":
+          description: successful operation
+        "401":
+          description: Access token is missing or invalid
+        "404":
+          description: Cannot fetch region, server error
+  /students/grades/{sn}:
+    get:
+      security : 
+        -  bearerAuth: []
+      tags:
+      - students
+      summary: Get grades info by sn
+      description: ""
+      operationId: student-grades-by-sn
+      produces:
+      - application/json
+      parameters:
+      - name: sn
+        in: path
+        description: 'The student number'
+        required: true
+        type: string
+      responses:
+        "200":
+          description: successful operation
+        "401":
+          description: Access token is missing or invalid
+        "404":
+          description: Cannot fetch region, server error
+  /students/transactions:
+    post:
+      security : 
+        -  bearerAuth: []
+      tags:
+      - students
+      summary: Get Student Transactions
+      description: ""
+      operationId: transactions
+      produces:
+      - application/json
+      parameters:
+      - name: studID
+        in: body
+        description: 'Student ID'
+        required: true
+      responses:
+        "200":
+          description: successful operation
+        "401":
+          description: Access token is missing or invalid
+        "404":
+          description: Cannot fetch region, server error
+  /students/olpayments:
+    post:
+      security : 
+        -  bearerAuth: []
+      tags:
+      - students
+      summary: Get Student Online Payments
+      description: ""
+      operationId: olpayments
+      produces:
+      - application/json
+      parameters:
+      - name: sn
+        in: body
+        description: 'Student ID'
+        required: true
+      responses:
+        "200":
+          description: successful operation
+        "401":
+          description: Access token is missing or invalid
+        "404":
+          description: Cannot fetch region, server error
+  /employees/info:
+    post:
+      security : 
+        -  bearerAuth: []
+      tags:
+      - employees
+      summary: Get Employee by email
+      description: ""
+      operationId: emp-info
+      produces:
+      - application/json
+      parameters:
+      - name: empemail
+        in: body
+        description: 'Employee Email'
+        required: true
+      responses:
+        "200":
+          description: successful operation
+        "401":
+          description: Access token is missing or invalid
+        "404":
+          description: Cannot fetch region, server error
+  /employees/getPhotos:
+    get:
+      security : 
+        - bearerAuth: []
+      tags:
+      - employees
+      summary: Get the all photos
+      description: ""
+      operationId: getPhotos
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: successful operation
+        "401":
+          description: Access token is missing or invalid
+        "404":
+          description: Cannot fetch regions, server error.
+  /user:
+    post:
+      tags:
+      - user
+      security:
+      - bearerAuth: []
+      summary: Create user
+      description: This can only be done by the logged in user.
+      operationId: createUser
+      produces:
+      - application/xml
+      - application/json
+      parameters:
+      - in: body
+        name: body
+        description: Created user object
+        required: true
+        schema:
+          $ref: '#/definitions/User'
+      responses:
+        default:
+          description: successful operation
+  /user/logout:
+    get:
+      tags:
+      - user
+      summary: Logs out current logged in user session
+      description: ""
+      operationId: logoutUser
+      produces:
+      - application/xml
+      - application/json
+      parameters: []
+      responses:
+        default:
+          description: successful operation
+  /user/{username}:
+    get:
+      tags:
+      - user
+      summary: Get user by user name
+      description: ""
+      operationId: getUserByName
+      produces:
+      - application/xml
+      - application/json
+      parameters:
+      - name: username
+        in: path
+        description: 'The name that needs to be fetched. Use user1 for testing. '
+        required: true
+        type: string
+      responses:
+        "200":
+          description: successful operation
+          schema:
+            $ref: '#/definitions/User'
+        "400":
+          description: Invalid username supplied
+        "404":
+          description: User not found
+        "401":
+          description: Access token is missing or invalid
+  
+definitions:
+  User:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      username:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      email:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      userStatus:
+        type: integer
+        format: int32
+        description: User Status
+    xml:
+      name: User
+
