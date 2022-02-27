@@ -1,4 +1,4 @@
-const sql = require("mssql");
+const cdigit = require("cdigit");
 // const cryptojs = require("crypto-js");
 // const btoa = require("btoa");
 // const atob = require("atob");
@@ -40,9 +40,21 @@ function decrypt(string) {
   return decrypted;
 }
 
+function generateCheckDigit (details, digit) {
+  const generatedDigit = cdigit.luhn.generate(digit);
+  const validatedDigit = cdigit.luhn.validate(generatedDigit);
+  if (validatedDigit) {
+    const uniqueDigit = `${details}${generatedDigit}`
+    return uniqueDigit
+  } else {
+    return false
+  }
+}
+
 module.exports = {
   getIp,
   randomString,
   encrypt,
-  decrypt
+  decrypt,
+  generateCheckDigit
 };

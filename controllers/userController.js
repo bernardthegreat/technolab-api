@@ -1,7 +1,6 @@
 const { request } = require("express");
 const sqlConfig = require("../config/database")
 const jwt = require("jsonwebtoken");
-const md5 = require('md5');
 const mysql = require('mysql');
 const conn = mysql.createPool(sqlConfig.sqlCredentials)
 const bcrypt = require('bcrypt');

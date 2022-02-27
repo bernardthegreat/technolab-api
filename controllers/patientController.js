@@ -1,21 +1,38 @@
 const sqlConfig = require("../config/database")
 const mysql = require('mysql');
 const conn = mysql.createPool(sqlConfig.sqlCredentials)
+const helpers = require("../helpers/helpers");
 // JSON FORMAT FOR UPDATING //
 // {
-//   "name": "IT",
-//   "description": "IT Role",
-//   "is_admin": 0,
+//   "first_name": "Bernard",
+//   "middle_name": "Tiaga",
+//   "last_name": "Gresola",
+//   "birthdate": "1993-05-06",
+//   "alias": "",
+//   "gender": "M",
+//   "address": "223 Col. Bonny Serrano Avenue, Barangay Horseshoe, Quezon City",
+//   "email_address": "gresolabernard@gmail.com",
+//   "contact_number": "09053254071",
+//   "religion": "",
+//   "civil_status": "S",
 //   "active": 1,
-//   "role_id": 8
+//   "patient_no": 202202270000018
 // }
 // JSON FORMAT FOR UPDATING //
 
 // JSON FORMAT FOR ADDING //
 // {
-//   "name": "IT",
-//   "description": "IT Role",
-//   "is_admin": 1
+//   "first_name": "Bernard",
+//   "middle_name": "Tiaga",
+//   "last_name": "Gresola",
+//   "birthdate": "1993-05-06",
+//   "alias": "",
+//   "gender": "M",
+//   "address": "Quezon City",
+//   "email_address": "gresolabernard@gmail.com",
+//   "contact_number": "09053254071",
+//   "religion": "",
+//   "civil_status": "S"
 // }
 // JSON FORMAT FOR ADDING //
 
@@ -27,8 +44,8 @@ async function getAllPatients (req, res) {
       sqlWhere = `where (first_name = '${req.params.first_name}' or last_name = '${req.params.last_name}')`
     }
 
-    if (req.params.patientID) {
-      sqlWhere = `where patient_id = '${req.params.patient_id}'`
+    if (req.params.patientNo) {
+      sqlWhere = `where patient_no = '${req.params.patientNo}'`
     }
 
     var sqlQuery = `SELECT
@@ -64,7 +81,7 @@ async function getAllPatients (req, res) {
   });
 }
 
-async function updateRole (req, res) {
+async function updatePatient (req, res) {
   conn.getConnection(function(err, connection) {
     if (err) throw err; // not connected!
     var sqlQuery = `UPDATE patients SET
@@ -82,7 +99,7 @@ async function updateRole (req, res) {
       active = '${req.body.active}',
       datetime_updated = CURRENT_TIMESTAMP
     where
-      id = '${req.body.role_id}'
+      patient_no = '${req.body.patient_no}'
     `
     connection.beginTransaction(function(err) {
       if (err) { throw err; }
@@ -100,7 +117,7 @@ async function updateRole (req, res) {
             });
           }
           res.send({
-            success: 'Role has been updated'
+            success: 'Patient has been updated'
           })
         });
         connection.release();
@@ -114,70 +131,103 @@ async function updateRole (req, res) {
 
 async function addPatient (req, res) {
   conn.getConnection(async function(err, connection) {
-    if (err) throw err; // not connected!
-    var sqlQuery = `
-      INSERT INTO patients
-        (
-          patient_id,
+    if (err) throw err; // not connect
+    let sqlSelect = `SELECT MAX(id) last_inserted_id FROM patients`
+    let generatedPatientID = ''
+    connection.query(sqlSelect, async function (error, results, fields) {
+      generatedPatientID = await generatePatientID(results)
+      var sqlQuery = `
+        INSERT INTO patients
+          (
+            patient_no,
+            first_name,
+            middle_name,
+            last_name,
+            birthdate,
+            alias,
+            gender,
+            address,
+            email_address,
+            contact_number,
+            religion,
+            civil_status
+          )
+        VALUES
+          (
+            '${generatedPatientID}',
+            '${req.body.first_name}',
+            '${req.body.middle_name}',
+            '${req.body.last_name}',
+            '${req.body.birthdate}',
+            '${req.body.alias}',
+            '${req.body.gender}',
+            '${req.body.address}',
+            '${req.body.email_address}',
+            '${req.body.contact_number}',
+            '${req.body.religion}',
+            '${req.body.civil_status}'
+          )
+      `
+      connection.beginTransaction(function(err) {
+        if (err) { throw err; }
+        let sqlCheckDuplicate = `SELECT
           first_name,
-          middle_name,
           last_name,
-          birthdate,
-          alias,
-          gender,
-          address,
-          email_address,
-          contact_number,
-          religion,
-          civil_status
-        )
-      VALUES
-        (
-          '${patient_id}',
-          '${first_name}',
-          '${middle_name}',
-          '${last_name}',
-          '${birthdate}',
-          '${alias}',
-          '${gender}',
-          '${address}',
-          '${email_address}',
-          '${contact_number}',
-          '${religion}',
-          '${civil_status}'
-        )
-    `
-    connection.beginTransaction(function(err) {
-      if (err) { throw err; }
-      connection.query(sqlQuery, function (error, results, fields) {
-        if (error) {
-          return connection.rollback(function() {
-            res.send(error)
-            // throw error;
-          });
-        }
-        connection.commit(async function(err) {
-          if (err) {
-            return connection.rollback(function() {
-              res.send(err)
-              // throw err;
-            });
+          birthdate
+        from patients
+          where 
+        first_name = '${req.body.first_name}'
+        and last_name = '${req.body.last_name}'
+        and birthdate = '${req.body.birthdate}'`
+        connection.query(sqlCheckDuplicate, function (error, results, fields) {
+          if (results.length > 0) {
+            res.status(403).send({ error: 'Patient already registered' });
+            return
           }
-          res.send({
-            success: 'Role has been added'
-          })
-        });
-        connection.release();
-        if (error) 
-          res.send(error)
-          // throw error;
+          connection.query(sqlQuery, function (error, results, fields) {
+            
+            if (error) {
+              return connection.rollback(function() {
+                res.send(error)
+                // throw error;
+              });
+            }
+
+            connection.commit(async function(err) {
+              if (err) {
+                return connection.rollback(function() {
+                  res.send(err)
+                  // throw err;
+                });
+              }
+            
+              res.send({
+                success: 'Patient has been added'
+              })
+            });
+            
+            connection.release();
+            if (error) 
+              res.send(error)
+              // throw error;
+          });
+        })
       });
-    });
+      if (error) throw error;
+    })
   });
+}
+
+async function generatePatientID (lastInsertedID) {
+  const dateToday = new Date().toISOString().substr(0, 10).replaceAll('-', '')
+  let lastInsertedId = lastInsertedID[0].last_inserted_id === null ? 1 : lastInsertedID[0].last_inserted_id
+  let zeroFilledLastID = ('000000'+lastInsertedId).slice(-6);
+  let patientNumber = helpers.generateCheckDigit(dateToday, zeroFilledLastID)
+  return patientNumber
 }
 
 module.exports = {
   getAllPatients,
-  updateRole,
+  updatePatient,
   addPatient,
 };
