@@ -25,6 +25,7 @@ const roleRoutes = require('./routes/roleRoutes');
 const patientRoutes = require('./routes/patientRoutes');
 const labSectionRoutes = require('./routes/labSectionRoutes');
 const laboratoryRoutes = require('./routes/laboratoryRoutes');
+const instrumentRoutes = require('./routes/instrumentRoutes');
 // Basic File Routes //
 
 // Basic Routes //
@@ -34,6 +35,7 @@ app.use("/roles", roleRoutes);
 app.use("/patients", patientRoutes);
 app.use("/lab-sections", labSectionRoutes);
 app.use("/laboratories", laboratoryRoutes);
+app.use("/instruments", instrumentRoutes)
 // Basic Routes //
 
 app.use('/public',express.static('public'));

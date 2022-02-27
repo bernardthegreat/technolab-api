@@ -8,7 +8,7 @@ const router=Router();
 // router.post('/authenticate', authController.authenticate);
 // router.post('/validate-token', authController.validateToken)
 
-router.post('/authenticate-test', authController.authenticate)
+router.post('/authenticate', authController.authenticate)
 
 router.get('*', (req,res)=>{
     res.status(404).send({ error: "API not found"});
