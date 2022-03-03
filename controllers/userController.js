@@ -54,15 +54,16 @@ async function getAllUsers (req, res) {
         license_number,
         u.active,
         r.name role,
-        ld.name laboratory_department,
+        ls.name laboratory_department,
         u.datetime_created,
         u.datetime_updated
       FROM users u
         join user_roles ur on u.id = ur.user_id
         join roles r on ur.role_id = r.id
-        left join laboratory_departments ld on ur.laboratory_department_id = ld.id
+        left join laboratory_sections ls on ur.laboratory_section_id = ls.id
       ${sqlWhere}
     `
+    console.log(sqlQuery)
     connection.query(sqlQuery, function (error, results, fields) {
       if (results.length === 0) {
         res.send({ message: 'User not found'})
