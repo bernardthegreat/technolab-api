@@ -15,7 +15,7 @@ const salt = bcrypt.genSaltSync(saltRounds);
 //   "last_name": "Gresola",
 //   "signature": null,
 //   "license_number": null,
-//   "laboratory_department_id": null,
+//   "laboratory_section_id": null,
 //   "role_id": 1
 // }
 // JSON FORMAT FOR ADDING //
@@ -31,7 +31,7 @@ const salt = bcrypt.genSaltSync(saltRounds);
 //   "license_number": null,
 //   "active": 1,
 //   "user_id": 1,
-//   "laboratory_department_id": null,
+//   "laboratory_section_id": null,
 //   "role_id": 1
 // }
 // JSON FORMAT FOR UPDATING //
@@ -54,7 +54,8 @@ async function getAllUsers (req, res) {
         license_number,
         u.active,
         r.name role,
-        ls.name laboratory_department,
+        r.id role_id,
+        ls.name laboratory_section,
         u.datetime_created,
         u.datetime_updated
       FROM users u
@@ -62,6 +63,7 @@ async function getAllUsers (req, res) {
         join roles r on ur.role_id = r.id
         left join laboratory_sections ls on ur.laboratory_section_id = ls.id
       ${sqlWhere}
+      order by active desc
     `
     console.log(sqlQuery)
     connection.query(sqlQuery, function (error, results, fields) {
@@ -71,7 +73,7 @@ async function getAllUsers (req, res) {
       }
       res.send(results)
       connection.release();
-      if (error) throw error;
+      if (error) res.status(403).send({ error: error });;
     });
   });
 }
@@ -93,6 +95,7 @@ async function updateUser (req, res) {
     where
       id = '${req.body.user_id}'
     `
+    console.log(sqlQuery)
     connection.beginTransaction(function(err) {
       if (err) { throw err; }
       connection.query(sqlQuery, function (error, results, fields) {
@@ -189,13 +192,13 @@ async function insertUserRole (connection, userDetails) {
           (
             user_id,
             role_id,
-            laboratory_department_id
+            laboratory_section_id
           )
         VALUES
           (
             '${results[0].id}',
             '${userDetails.role_id}',
-            ${userDetails.laboratory_department_id}
+            ${userDetails.laboratory_section_id}
           )
       `
       connection.query(sqlInsertRole, function (error, results, fields) {
@@ -228,7 +231,7 @@ async function updateUserRole (connection, userDetails) {
     var sqlInsertRole = `
       UPDATE user_roles SET
         role_id = '${userDetails.role_id}',
-        laboratory_department_id = ${userDetails.laboratory_department_id},
+        laboratory_section_id = ${userDetails.laboratory_section_id},
         datetime_updated = CURRENT_TIMESTAMP
       WHERE
         user_id = '${userDetails.user_id}'
