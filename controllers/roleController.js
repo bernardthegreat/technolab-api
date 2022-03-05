@@ -30,7 +30,7 @@ async function getAllRoles (req, res) {
         id,
         name,
         description,
-        is_admin
+        is_admin,
         active,
         datetime_created,
         datetime_updated,

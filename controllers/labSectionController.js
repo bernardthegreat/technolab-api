@@ -18,9 +18,7 @@ const conn = mysql.createPool(sqlConfig.sqlCredentials)
 // JSON FORMAT FOR ADDING //
 // {
 //   "name": "Hematology",
-//   "description": "Hematology Department",
-//   "active": 1,
-//   "section_id": 1
+//   "description": "Hematology Department"
 // }
 // JSON FORMAT FOR ADDING //
 
