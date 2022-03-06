@@ -3,15 +3,9 @@ const mysql = require('mysql');
 const conn = mysql.createPool(sqlConfig.sqlCredentials)
 // JSON FORMAT FOR UPDATING //
 // {
-//   "username": "testestest",
-//   "password": "123456",
-//   "first_name": "Bernard",
-//   "middle_name": "Tiaga",
-//   "last_name": "Gresola",
-//   "signature": null,
-//   "license_number": null,
-//   "laboratory_section_id": null,
-//   "role_id": 1
+//   "name": "Hematology",
+//   "description": "Hematology Department"
+//   "active": 1
 // }
 // JSON FORMAT FOR UPDATING //
 

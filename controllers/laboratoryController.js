@@ -44,7 +44,6 @@ async function getAllLaboratories (req, res) {
       FROM laboratories
       ${sqlWhere}
     `
-    console.log(sqlQuery)
     connection.query(sqlQuery, function (error, results, fields) {
       if (results.length === 0) {
         res.send({ message: 'Laboratory not found'})

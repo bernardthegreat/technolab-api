@@ -7,7 +7,7 @@ const bcrypt = require('bcrypt');
 
 async function authenticate (req, res) {
   conn.getConnection(function(err, connection) {
-    if (err) throw err; // not connected!
+    if (err) return err; // not connected!
     var sqlWhere = ''
     if (req.body.username) {
       sqlWhere = `where username = '${req.body.username}'`
@@ -29,12 +29,12 @@ async function authenticate (req, res) {
       FROM users u
         join user_roles ur on u.id = ur.user_id
         join roles r on ur.role_id = r.id
-        left join laboratory_departments ld on ur.laboratory_department_id = ld.id
+        left join laboratory_sections ld on ur.laboratory_section_id = ld.id
       ${sqlWhere}
     `
     connection.query(sqlQuery, async function (error, results, fields) {
       if (results.length === 0) {
-        res.send({ message: 'User not found'})
+        res.status(403).send({ error: 'Authentication error: User not found' });
         return
       }
       const hash = await verifyHash(req.body.password, results[0].password)
@@ -50,7 +50,7 @@ async function authenticate (req, res) {
       }
       res.status(200).send(userAuthDetails);
       connection.release();
-      if (error) throw error;
+      if (error) return error;
     });
   });
 }

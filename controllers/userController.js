@@ -1,11 +1,10 @@
-const { request } = require("express");
 const sqlConfig = require("../config/database")
-const jwt = require("jsonwebtoken");
 const mysql = require('mysql');
 const conn = mysql.createPool(sqlConfig.sqlCredentials)
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const salt = bcrypt.genSaltSync(saltRounds);
+const validateToken = require('../middleware/validateToken.js');
 // JSON FORMAT FOR ADDING //
 // {
 //   "username": "testestest",
@@ -37,6 +36,17 @@ const salt = bcrypt.genSaltSync(saltRounds);
 // JSON FORMAT FOR UPDATING //
 
 async function getAllUsers (req, res) {
+  const bearerHeader=req.headers["authorization"];
+  if (bearerHeader===undefined){
+    res.status(401).send({ error: "Token is required" });
+    return   
+  }
+  const token = validateToken(bearerHeader)
+  console.log(token, 'herere')
+  if (token.error) {
+    res.status(403).send({ error: token.error });
+    return
+  }
   conn.getConnection(function(err, connection) {
     if (err) throw err; // not connected!
     var sqlWhere = ''
@@ -65,7 +75,6 @@ async function getAllUsers (req, res) {
       ${sqlWhere}
       order by active desc
     `
-    console.log(sqlQuery)
     connection.query(sqlQuery, function (error, results, fields) {
       if (results.length === 0) {
         res.send({ message: 'User not found'})
@@ -95,7 +104,6 @@ async function updateUser (req, res) {
     where
       id = '${req.body.user_id}'
     `
-    console.log(sqlQuery)
     connection.beginTransaction(function(err) {
       if (err) { throw err; }
       connection.query(sqlQuery, function (error, results, fields) {
@@ -183,6 +191,7 @@ async function addUser (req, res) {
 
 
 async function insertUserRole (connection, userDetails) {
+  
   let sqlSelect = `SELECT id from users where username = '${userDetails.username}'`
   connection.query(sqlSelect, function (error, results, fields) {
     connection.beginTransaction(function(err) {
@@ -198,7 +207,7 @@ async function insertUserRole (connection, userDetails) {
           (
             '${results[0].id}',
             '${userDetails.role_id}',
-            ${userDetails.laboratory_section_id}
+            ${userDetails.laboratory_section_id === '' ? null : userDetails.laboratory_section_id} 
           )
       `
       connection.query(sqlInsertRole, function (error, results, fields) {

@@ -15,13 +15,11 @@ module.exports = function validateToken(bearerHeader) {
   try {
     
     //VALIDATE ACCESS KEY FIRST
-    if (bearerToken===process.env.MYUERM_KEY){
+    if (bearerToken===process.env.ACCESS_TOKEN){
       return {
         success: true
       }
     }
-    console.log(bearerHeader);
-    console.log(process.env.MYUERM_KEY);
 
     //VALIDATE ACCESS KEY FIRST
     var decoded = jwt.verify(bearerToken, process.env.TOKEN);  
