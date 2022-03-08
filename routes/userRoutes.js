@@ -13,7 +13,7 @@ router.get('*', (req,res)=>{
 
 // POST
 router.post('/add', userController.addUser);
-
+router.post('/hash', userController.testHash)
 // PUT
 router.put('/update/', userController.updateUser);
 

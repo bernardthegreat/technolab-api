@@ -42,7 +42,6 @@ async function getAllUsers (req, res) {
     return   
   }
   const token = validateToken(bearerHeader)
-  console.log(token, 'herere')
   if (token.error) {
     res.status(403).send({ error: token.error });
     return
@@ -88,9 +87,25 @@ async function getAllUsers (req, res) {
 }
 
 async function updateUser (req, res) {
+  const bearerHeader=req.headers["authorization"];
+  if (bearerHeader===undefined){
+    res.status(401).send({ error: "Token is required" });
+    return   
+  }
+  const token = validateToken(bearerHeader)
+  if (token.error) {
+    res.status(403).send({ error: token.error });
+    return
+  }
   conn.getConnection(async function(err, connection) {
     if (err) throw err; // not connected!
-    const hashPassword = await generateHash(req.body.password)
+    let hashPassword = ''
+    if (req.body.editType === 2) {
+      hashPassword = req.body.password
+    } else {  
+      hashPassword = await generateHash(req.body.password)
+    }
+    console.log(req.body)
     var sqlQuery = `UPDATE users SET
       username = '${req.body.username}',
       password = '${hashPassword}',
@@ -104,6 +119,7 @@ async function updateUser (req, res) {
     where
       id = '${req.body.user_id}'
     `
+    console.log(sqlQuery)
     connection.beginTransaction(function(err) {
       if (err) { throw err; }
       connection.query(sqlQuery, function (error, results, fields) {
@@ -134,6 +150,16 @@ async function updateUser (req, res) {
 }
 
 async function addUser (req, res) {
+  const bearerHeader=req.headers["authorization"];
+  if (bearerHeader===undefined){
+    res.status(401).send({ error: "Token is required" });
+    return   
+  }
+  const token = validateToken(bearerHeader)
+  if (token.error) {
+    res.status(403).send({ error: token.error });
+    return
+  }
   conn.getConnection(async function(err, connection) {
     if (err) throw err; // not connected!
     const hashPassword = await generateHash(req.body.password)
@@ -191,7 +217,6 @@ async function addUser (req, res) {
 
 
 async function insertUserRole (connection, userDetails) {
-  
   let sqlSelect = `SELECT id from users where username = '${userDetails.username}'`
   connection.query(sqlSelect, function (error, results, fields) {
     connection.beginTransaction(function(err) {
@@ -245,6 +270,7 @@ async function updateUserRole (connection, userDetails) {
       WHERE
         user_id = '${userDetails.user_id}'
     `
+    console.log(sqlInsertRole)
     connection.query(sqlInsertRole, function (error, results, fields) {
       if (error) {
         return connection.rollback(function() {
@@ -273,8 +299,15 @@ async function generateHash (password) {
 }
 
 
+async function testHash (req, res) {
+  const hash = bcrypt.hashSync(req.body.password, salt);
+  res.send(hash)
+}
+
+
 module.exports = {
   getAllUsers,
   updateUser,
   addUser,
+  testHash
 };

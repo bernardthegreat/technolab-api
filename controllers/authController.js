@@ -65,7 +65,8 @@ async function verifyHash (password, hashPassword) {
 }
 
 async function generateJWTToken (credentials) {
-  const expiresIn = 60;
+  // const expiresIn = 259200;
+  const expiresIn = 15
   var token = jwt.sign(
     {
       username: credentials.username,
