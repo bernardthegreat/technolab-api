@@ -12,9 +12,9 @@ router.get('*', (req,res)=>{
 
 
 // POST
-router.post('/add', patientController.addPatient);
+router.post('/', patientController.addPatient);
 
 // PUT
-router.put('/update', patientController.updatePatient);
+router.put('/:id', patientController.updatePatient);
 
 module.exports=router;

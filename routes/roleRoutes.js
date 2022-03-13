@@ -12,9 +12,9 @@ router.get('*', (req,res)=>{
 
 
 // POST
-router.post('/add', roleController.addRole);
+router.post('/', roleController.addRole);
 
 // PUT
-router.put('/update', roleController.updateRole);
+router.put('/:id', roleController.updateRole);
 
 module.exports=router;

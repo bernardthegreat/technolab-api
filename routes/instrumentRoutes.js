@@ -12,9 +12,9 @@ router.get('*', (req,res)=>{
 
 
 // POST
-router.post('/add', instrumentController.addInstrument);
+router.post('/', instrumentController.addInstrument);
 
 // PUT
-router.put('/update/', instrumentController.updateInstrument);
+router.put('/:id', instrumentController.updateInstrument);
 
 module.exports=router;

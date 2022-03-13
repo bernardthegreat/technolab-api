@@ -2,6 +2,7 @@ const sqlConfig = require("../config/database")
 const mysql = require('mysql');
 const conn = mysql.createPool(sqlConfig.sqlCredentials)
 const helpers = require("../helpers/helpers");
+const validateToken = require('../middleware/validateToken.js');
 // JSON FORMAT FOR UPDATING //
 // {
 //   "first_name": "Bernard",
@@ -37,6 +38,16 @@ const helpers = require("../helpers/helpers");
 // JSON FORMAT FOR ADDING //
 
 async function getAllPatients (req, res) {
+  const bearerHeader=req.headers["authorization"];
+  if (bearerHeader===undefined){
+    res.status(401).send({ error: "Token is required" });
+    return   
+  }
+  const token = validateToken(bearerHeader)
+  if (token.error) {
+    res.status(403).send({ error: token.error });
+    return
+  }
   conn.getConnection(function(err, connection) {
     if (err) throw err; // not connected!
     var sqlWhere = 'limit 500'
@@ -82,6 +93,16 @@ async function getAllPatients (req, res) {
 }
 
 async function updatePatient (req, res) {
+  const bearerHeader=req.headers["authorization"];
+  if (bearerHeader===undefined){
+    res.status(401).send({ error: "Token is required" });
+    return   
+  }
+  const token = validateToken(bearerHeader)
+  if (token.error) {
+    res.status(403).send({ error: token.error });
+    return
+  }
   conn.getConnection(function(err, connection) {
     if (err) throw err; // not connected!
     var sqlQuery = `UPDATE patients SET
@@ -130,6 +151,16 @@ async function updatePatient (req, res) {
 }
 
 async function addPatient (req, res) {
+  const bearerHeader=req.headers["authorization"];
+  if (bearerHeader===undefined){
+    res.status(401).send({ error: "Token is required" });
+    return   
+  }
+  const token = validateToken(bearerHeader)
+  if (token.error) {
+    res.status(403).send({ error: token.error });
+    return
+  }
   conn.getConnection(async function(err, connection) {
     if (err) throw err; // not connect
     let sqlSelect = `SELECT MAX(id) last_inserted_id FROM patients`
