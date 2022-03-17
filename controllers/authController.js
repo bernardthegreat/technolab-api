@@ -52,11 +52,11 @@ async function authenticate(req, res) {
       );
       const tokenDetails = {
         token: jwtToken,
-        status: 1
-      }
+        status: 1,
+      };
       console.log(tokenDetails);
       const tokenRedis = await helpers.checkRedisToken(tokenDetails);
-      console.log(tokenRedis)
+      console.log(tokenRedis);
       const userAuthDetails = {
         token: jwtToken,
         userDetails: results,
@@ -97,30 +97,22 @@ async function generateJWTToken(credentials) {
 }
 
 async function logout(req, res) {
-  const tokenStatus = await helpers.addRedisToken(req.headers["authorization"])
+  const validate = await helpers.validateTokenizations(
+    req.headers["authorization"]
+  );
+  if (validate.error) {
+    res.status(validate.type).send({ error: validate.error });
+    return;
+  }
+  const tokenStatus = await helpers.addRedisToken(req.headers["authorization"]);
   if (tokenStatus) {
-    res.status(200).send({success: 'Successfully logout'});
+    res.status(200).send({ success: "Successfully logout" });
   } else {
-    res.status(403).send({error: tokenStatus.error});
+    res.status(403).send({ error: tokenStatus.error });
   }
 }
 
-// async function validateToken(req, res) {
-//   const token = req.headers["authorization"]
-//   const bearer = token.split(' ');
-//   const bearerToken = bearer[1];
-
-//   try {
-//     var decoded = jwt.verify(bearerToken, process.env.TOKEN);
-//     res.send({message: 'success'})
-//     return decoded != undefined;
-//   } catch (error) {
-//     res.send({message: 'error'})
-//     return false;
-//   }
-// }
-
 module.exports = {
   authenticate,
-  logout
+  logout,
 };

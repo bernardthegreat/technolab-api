@@ -1,10 +1,9 @@
-const sqlConfig = require("../config/database")
-const mysql = require('mysql');
-const conn = mysql.createPool(sqlConfig.sqlCredentials)
-const bcrypt = require('bcrypt');
+const sqlConfig = require("../config/database");
+const mysql = require("mysql");
+const conn = mysql.createPool(sqlConfig.sqlCredentials);
+const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const salt = bcrypt.genSaltSync(saltRounds);
-const validateToken = require('../middleware/validateToken.js');
 const helpers = require("../helpers/helpers.js");
 // JSON FORMAT FOR ADDING //
 // {
@@ -36,32 +35,19 @@ const helpers = require("../helpers/helpers.js");
 // }
 // JSON FORMAT FOR UPDATING //
 
-async function getAllUsers (req, res) {
-  const bearerHeader=req.headers["authorization"];
-  if (bearerHeader===undefined){
-    res.status(401).send({ error: "Token is required" });
-    return   
-  }
-  const token = validateToken(bearerHeader)
-  if (token.error) {
-    res.status(403).send({ error: token.error });
+async function getAllUsers(req, res) {
+  const validate = await helpers.validateTokenizations(
+    req.headers["authorization"]
+  );
+  if (validate.error) {
+    res.status(validate.type).send({ error: validate.error });
     return
   }
-  const tokenDetails = {
-    token: bearerHeader,
-    status: 2
-  }
-  const tokenRedis = await helpers.checkRedisToken(tokenDetails);
-  if (tokenRedis.error) {
-    res.status(403).send({ error: tokenRedis.error });
-    return
-  }
-
-  conn.getConnection(function(err, connection) {
+  conn.getConnection(function (err, connection) {
     if (err) throw err; // not connected!
-    var sqlWhere = ''
+    var sqlWhere = "";
     if (req.params.username) {
-      sqlWhere = `where username = '${req.params.username}'`
+      sqlWhere = `where username = '${req.params.username}'`;
     }
     var sqlQuery = `SELECT
         u.id,
@@ -84,39 +70,36 @@ async function getAllUsers (req, res) {
         left join laboratory_sections ls on ur.laboratory_section_id = ls.id
       ${sqlWhere}
       order by active desc
-    `
+    `;
     connection.query(sqlQuery, function (error, results, fields) {
       if (results.length === 0) {
-        res.send({ message: 'User not found'})
-        return
+        res.send({ message: "User not found" });
+        return;
       }
-      res.send(results)
+      res.send(results);
       connection.release();
-      if (error) res.status(403).send({ error: error });;
+      if (error) res.status(403).send({ error: error });
     });
   });
 }
 
-async function updateUser (req, res) {
-  const bearerHeader=req.headers["authorization"];
-  if (bearerHeader===undefined){
-    res.status(401).send({ error: "Token is required" });
-    return   
-  }
-  const token = validateToken(bearerHeader)
-  if (token.error) {
-    res.status(403).send({ error: token.error });
+async function updateUser(req, res) {
+  const validate = await helpers.validateTokenizations(
+    req.headers["authorization"]
+  );
+  if (validate.error) {
+    res.status(validate.type).send({ error: validate.error });
     return
   }
-  conn.getConnection(async function(err, connection) {
+  conn.getConnection(async function (err, connection) {
     if (err) throw err; // not connected!
-    let hashPassword = ''
+    let hashPassword = "";
     if (req.body.editType === 2) {
-      hashPassword = req.body.password
-    } else {  
-      hashPassword = await generateHash(req.body.password)
+      hashPassword = req.body.password;
+    } else {
+      hashPassword = await generateHash(req.body.password);
     }
-    console.log(req.body)
+    console.log(req.body);
     var sqlQuery = `UPDATE users SET
       username = '${req.body.username}',
       password = '${hashPassword}',
@@ -129,51 +112,50 @@ async function updateUser (req, res) {
       datetime_updated = CURRENT_TIMESTAMP
     where
       id = '${req.body.user_id}'
-    `
-    console.log(sqlQuery)
-    connection.beginTransaction(function(err) {
-      if (err) { throw err; }
+    `;
+    console.log(sqlQuery);
+    connection.beginTransaction(function (err) {
+      if (err) {
+        throw err;
+      }
       connection.query(sqlQuery, function (error, results, fields) {
         if (error) {
-          return connection.rollback(function() {
-            res.send(error)
+          return connection.rollback(function () {
+            res.send(error);
           });
         }
-        connection.commit(function(err) {
+        connection.commit(function (err) {
           if (err) {
-            return connection.rollback(function() {
-              res.send(err)
+            return connection.rollback(function () {
+              res.send(err);
               // throw err;
             });
           }
-          updateUserRole(connection, req.body)
+          updateUserRole(connection, req.body);
           res.send({
-            success: 'User has been updated'
-          })
+            success: "User has been updated",
+          });
         });
         connection.release();
-        if (error) 
+        if (error)
           // throw error;
-          res.send(error)
+          res.send(error);
       });
     });
   });
 }
 
-async function addUser (req, res) {
-  const bearerHeader=req.headers["authorization"];
-  if (bearerHeader===undefined){
-    res.status(401).send({ error: "Token is required" });
-    return   
-  }
-  const token = validateToken(bearerHeader)
-  if (token.error) {
-    res.status(403).send({ error: token.error });
+async function addUser(req, res) {
+  const validate = await helpers.validateTokenizations(
+    req.headers["authorization"]
+  );
+  if (validate.error) {
+    res.status(validate.type).send({ error: validate.error });
     return
   }
-  conn.getConnection(async function(err, connection) {
+  conn.getConnection(async function (err, connection) {
     if (err) throw err; // not connected!
-    const hashPassword = await generateHash(req.body.password)
+    const hashPassword = await generateHash(req.body.password);
     var sqlQuery = `
       INSERT INTO users 
         (
@@ -195,43 +177,45 @@ async function addUser (req, res) {
           '${req.body.signature}',
           '${req.body.license_number}'
         )
-    `
-    connection.beginTransaction(function(err) {
-      if (err) { throw err; }
+    `;
+    connection.beginTransaction(function (err) {
+      if (err) {
+        throw err;
+      }
       connection.query(sqlQuery, function (error, results, fields) {
         if (error) {
-          return connection.rollback(function() {
-            res.send(error)
+          return connection.rollback(function () {
+            res.send(error);
             // throw error;
           });
         }
-        connection.commit(async function(err) {
+        connection.commit(async function (err) {
           if (err) {
-            return connection.rollback(function() {
-              res.send(err)
+            return connection.rollback(function () {
+              res.send(err);
               // throw err;
             });
           }
-          await insertUserRole(connection, req.body)
+          await insertUserRole(connection, req.body);
           res.send({
-            success: 'User has been added'
-          })
+            success: "User has been added",
+          });
         });
         connection.release();
-        if (error) 
-          res.send(error)
-          // throw error;
+        if (error) res.send(error);
+        // throw error;
       });
     });
   });
 }
 
-
-async function insertUserRole (connection, userDetails) {
-  let sqlSelect = `SELECT id from users where username = '${userDetails.username}'`
+async function insertUserRole(connection, userDetails) {
+  let sqlSelect = `SELECT id from users where username = '${userDetails.username}'`;
   connection.query(sqlSelect, function (error, results, fields) {
-    connection.beginTransaction(function(err) {
-      if (err) { throw err; }
+    connection.beginTransaction(function (err) {
+      if (err) {
+        throw err;
+      }
       var sqlInsertRole = `
         INSERT INTO user_roles 
           (
@@ -243,36 +227,40 @@ async function insertUserRole (connection, userDetails) {
           (
             '${results[0].id}',
             '${userDetails.role_id}',
-            ${userDetails.laboratory_section_id === '' ? null : userDetails.laboratory_section_id} 
+            ${
+              userDetails.laboratory_section_id === ""
+                ? null
+                : userDetails.laboratory_section_id
+            } 
           )
-      `
+      `;
       connection.query(sqlInsertRole, function (error, results, fields) {
         if (error) {
-          return connection.rollback(function() {
-            return error
+          return connection.rollback(function () {
+            return error;
             // throw error;
           });
         }
-        connection.commit(function(err) {
+        connection.commit(function (err) {
           if (err) {
-            return connection.rollback(function() {
-              return err
+            return connection.rollback(function () {
+              return err;
               // throw err;
             });
           }
         });
-        if (error) 
-          return error
-          // throw error;
-      })
-    })
-  })
+        if (error) return error;
+        // throw error;
+      });
+    });
+  });
 }
 
-
-async function updateUserRole (connection, userDetails) {
-  connection.beginTransaction(function(err) {
-    if (err) { throw err; }
+async function updateUserRole(connection, userDetails) {
+  connection.beginTransaction(function (err) {
+    if (err) {
+      throw err;
+    }
     var sqlInsertRole = `
       UPDATE user_roles SET
         role_id = '${userDetails.role_id}',
@@ -280,45 +268,42 @@ async function updateUserRole (connection, userDetails) {
         datetime_updated = CURRENT_TIMESTAMP
       WHERE
         user_id = '${userDetails.user_id}'
-    `
-    console.log(sqlInsertRole)
+    `;
+    console.log(sqlInsertRole);
     connection.query(sqlInsertRole, function (error, results, fields) {
       if (error) {
-        return connection.rollback(function() {
-          return error
+        return connection.rollback(function () {
+          return error;
           // throw error;
         });
       }
-      connection.commit(function(err) {
+      connection.commit(function (err) {
         if (err) {
-          return connection.rollback(function() {
-            return err
+          return connection.rollback(function () {
+            return err;
             // throw err;
           });
         }
       });
-      if (error) 
-        return error
-        // throw error;
-    })
-  })
+      if (error) return error;
+      // throw error;
+    });
+  });
 }
 
-async function generateHash (password) {
+async function generateHash(password) {
   const hash = bcrypt.hashSync(password, salt);
-  return hash
+  return hash;
 }
 
-
-async function testHash (req, res) {
+async function testHash(req, res) {
   const hash = bcrypt.hashSync(req.body.password, salt);
-  res.send(hash)
+  res.send(hash);
 }
-
 
 module.exports = {
   getAllUsers,
   updateUser,
   addUser,
-  testHash
+  testHash,
 };

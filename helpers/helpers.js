@@ -100,6 +100,66 @@ async function addRedisToken(tokenDetails) {
   }
 }
 
+async function validateTokenizations(tokenBearer) {
+  const bearerHeader = tokenBearer;
+  if (bearerHeader === undefined) {
+    return {
+      error: "Token is required",
+      type: 401
+    };
+  }
+  const token = await validateToken(bearerHeader);
+  if (token.error) {
+    return { 
+      error: token.error,
+      type: 403
+    };
+  }
+  const tokenDetails = {
+    token: bearerHeader,
+    status: 2,
+  };
+  const tokenRedis = await checkRedisToken(tokenDetails);
+  if (tokenRedis.error) {
+    return {
+      error: tokenRedis.error,
+      type: 403
+    };
+  }
+  return { success: 'Validation success' }
+}
+
+function validateToken(bearerHeader) {
+  if (typeof bearerHeader === undefined) {
+    return {
+      error: "Token required",
+    };
+  }
+  const jwt = require("jsonwebtoken");
+  const bearerApikey = bearerHeader;
+  const bearer = bearerHeader.split(" ");
+  const bearerToken = bearer[1];
+
+  try {
+    //VALIDATE ACCESS KEY FIRST
+    if (bearerToken === process.env.ACCESS_TOKEN) {
+      return {
+        success: true,
+      };
+    }
+
+    //VALIDATE ACCESS KEY FIRST
+    var decoded = jwt.verify(bearerToken, process.env.TOKEN);
+    return {
+      success: decoded != undefined,
+    };
+  } catch (error) {
+    return {
+      error: error,
+    };
+  }
+}
+
 module.exports = {
   getIp,
   randomString,
@@ -108,4 +168,5 @@ module.exports = {
   generateCheckDigit,
   checkRedisToken,
   addRedisToken,
+  validateTokenizations
 };

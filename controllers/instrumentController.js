@@ -1,7 +1,7 @@
 const sqlConfig = require("../config/database");
 const mysql = require("mysql");
 const conn = mysql.createPool(sqlConfig.sqlCredentials);
-const validateToken = require("../middleware/validateToken.js");
+const helpers = require("../helpers/helpers");
 // JSON FORMAT FOR UPDATING //
 // {
 //   "name": "IT",
@@ -22,15 +22,12 @@ const validateToken = require("../middleware/validateToken.js");
 // JSON FORMAT FOR ADDING //
 
 async function getAllInstruments(req, res) {
-  const bearerHeader = req.headers["authorization"];
-  if (bearerHeader === undefined) {
-    res.status(401).send({ error: "Token is required" });
-    return;
-  }
-  const token = validateToken(bearerHeader);
-  if (token.error) {
-    res.status(403).send({ error: token.error });
-    return;
+  const validate = await helpers.validateTokenizations(
+    req.headers["authorization"]
+  );
+  if (validate.error) {
+    res.status(validate.type).send({ error: validate.error });
+    return
   }
   conn.getConnection(function (err, connection) {
     if (err) throw err; // not connected!
@@ -64,15 +61,12 @@ async function getAllInstruments(req, res) {
 }
 
 async function updateInstrument(req, res) {
-  const bearerHeader = req.headers["authorization"];
-  if (bearerHeader === undefined) {
-    res.status(401).send({ error: "Token is required" });
-    return;
-  }
-  const token = validateToken(bearerHeader);
-  if (token.error) {
-    res.status(403).send({ error: token.error });
-    return;
+  const validate = await helpers.validateTokenizations(
+    req.headers["authorization"]
+  );
+  if (validate.error) {
+    res.status(validate.type).send({ error: validate.error });
+    return
   }
   conn.getConnection(function (err, connection) {
     if (err) throw err; // not connected!
@@ -117,15 +111,12 @@ async function updateInstrument(req, res) {
 }
 
 async function addInstrument(req, res) {
-  const bearerHeader = req.headers["authorization"];
-  if (bearerHeader === undefined) {
-    res.status(401).send({ error: "Token is required" });
-    return;
-  }
-  const token = validateToken(bearerHeader);
-  if (token.error) {
-    res.status(403).send({ error: token.error });
-    return;
+  const validate = await helpers.validateTokenizations(
+    req.headers["authorization"]
+  );
+  if (validate.error) {
+    res.status(validate.type).send({ error: validate.error });
+    return
   }
   conn.getConnection(async function (err, connection) {
     if (err) throw err; // not connected!
