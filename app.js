@@ -1,31 +1,28 @@
-const express=require("express");
+const express = require("express");
 // const fs=require('fs');
-const morgan=require('morgan');
-const cors=require('cors');
-const swaggerUi = require('swagger-ui-express');
+const morgan = require("morgan");
+const cors = require("cors");
+const swaggerUi = require("swagger-ui-express");
 // const swaggerJsdoc =require('swagger-jsdoc');
 
+const YAML = require("yamljs");
+const swaggerDocument = YAML.load("./swagger/swagger.yaml");
 
-const YAML = require('yamljs');
-const swaggerDocument = YAML.load('./swagger/swagger.yaml');
-
-const app=express();
-
+const app = express();
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 
-
 // Basic File Routes //
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
-const roleRoutes = require('./routes/roleRoutes');
-const patientRoutes = require('./routes/patientRoutes');
-const labSectionRoutes = require('./routes/labSectionRoutes');
-const laboratoryRoutes = require('./routes/laboratoryRoutes');
-const instrumentRoutes = require('./routes/instrumentRoutes');
+const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
+const roleRoutes = require("./routes/roleRoutes");
+const patientRoutes = require("./routes/patientRoutes");
+const labSectionRoutes = require("./routes/labSectionRoutes");
+const laboratoryRoutes = require("./routes/laboratoryRoutes");
+const instrumentRoutes = require("./routes/instrumentRoutes");
 // Basic File Routes //
 
 // Basic Routes //
@@ -35,13 +32,13 @@ app.use("/roles", roleRoutes);
 app.use("/patients", patientRoutes);
 app.use("/lab-sections", labSectionRoutes);
 app.use("/laboratories", laboratoryRoutes);
-app.use("/instruments", instrumentRoutes)
+app.use("/instruments", instrumentRoutes);
 // Basic Routes //
 
-app.use('/public',express.static('public'));
+app.use("/public", express.static("public"));
 
 app.get("/", (req, res) => {
-    res.send({ message: "Welcome to TechnoLab API"});
+  res.send({ message: "Welcome to TechnoLab API" });
 });
 
 // app.listen(PORT, () => {

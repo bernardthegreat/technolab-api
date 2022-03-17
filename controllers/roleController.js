@@ -1,7 +1,7 @@
-const sqlConfig = require("../config/database")
-const mysql = require('mysql');
-const conn = mysql.createPool(sqlConfig.sqlCredentials)
-const validateToken = require('../middleware/validateToken.js');
+const sqlConfig = require("../config/database");
+const mysql = require("mysql");
+const conn = mysql.createPool(sqlConfig.sqlCredentials);
+const validateToken = require("../middleware/validateToken.js");
 // JSON FORMAT FOR UPDATING //
 // {
 //   "name": "IT",
@@ -20,24 +20,23 @@ const validateToken = require('../middleware/validateToken.js');
 // }
 // JSON FORMAT FOR ADDING //
 
-async function getAllRoles (req, res) {
-  const bearerHeader=req.headers["authorization"];
-  if (bearerHeader===undefined){
+async function getAllRoles(req, res) {
+  const bearerHeader = req.headers["authorization"];
+  if (bearerHeader === undefined) {
     res.status(401).send({ error: "Token is required" });
-    return   
+    return;
   }
-  const token = validateToken(bearerHeader)
+  const token = validateToken(bearerHeader);
   if (token.error) {
     res.status(403).send({ error: token.error });
-    return
+    return;
   }
 
-  
-  conn.getConnection(function(err, connection) {
+  conn.getConnection(function (err, connection) {
     if (err) throw err; // not connected!
-    var sqlWhere = ''
+    var sqlWhere = "";
     if (req.params.name) {
-      sqlWhere = `where name = '${req.params.name}'`
+      sqlWhere = `where name = '${req.params.name}'`;
     }
     var sqlQuery = `SELECT
         id,
@@ -50,31 +49,31 @@ async function getAllRoles (req, res) {
         remarks
       FROM roles
       ${sqlWhere}
-    `
+    `;
     connection.query(sqlQuery, function (error, results, fields) {
       if (results.length === 0) {
-        res.send({ message: 'Role not found'})
-        return
+        res.send({ message: "Role not found" });
+        return;
       }
-      res.send(results)
+      res.send(results);
       connection.release();
       if (error) throw error;
     });
   });
 }
 
-async function updateRole (req, res) {
-  const bearerHeader=req.headers["authorization"];
-  if (bearerHeader===undefined){
+async function updateRole(req, res) {
+  const bearerHeader = req.headers["authorization"];
+  if (bearerHeader === undefined) {
     res.status(401).send({ error: "Token is required" });
-    return   
+    return;
   }
-  const token = validateToken(bearerHeader)
+  const token = validateToken(bearerHeader);
   if (token.error) {
     res.status(403).send({ error: token.error });
-    return
+    return;
   }
-  conn.getConnection(function(err, connection) {
+  conn.getConnection(function (err, connection) {
     if (err) throw err; // not connected!
     var sqlQuery = `UPDATE roles SET
       name = '${req.body.name}',
@@ -84,47 +83,49 @@ async function updateRole (req, res) {
       datetime_updated = CURRENT_TIMESTAMP
     where
       id = '${req.body.role_id}'
-    `
-    connection.beginTransaction(function(err) {
-      if (err) { throw err; }
+    `;
+    connection.beginTransaction(function (err) {
+      if (err) {
+        throw err;
+      }
       connection.query(sqlQuery, function (error, results, fields) {
         if (error) {
-          return connection.rollback(function() {
-            res.send(error)
+          return connection.rollback(function () {
+            res.send(error);
           });
         }
-        connection.commit(function(err) {
+        connection.commit(function (err) {
           if (err) {
-            return connection.rollback(function() {
-              res.send(err)
+            return connection.rollback(function () {
+              res.send(err);
               // throw err;
             });
           }
           res.send({
-            success: 'Role has been updated'
-          })
+            success: "Role has been updated",
+          });
         });
         connection.release();
-        if (error) 
+        if (error)
           // throw error;
-          res.send(error)
+          res.send(error);
       });
     });
   });
 }
 
-async function addRole (req, res) {
-  const bearerHeader=req.headers["authorization"];
-  if (bearerHeader===undefined){
+async function addRole(req, res) {
+  const bearerHeader = req.headers["authorization"];
+  if (bearerHeader === undefined) {
     res.status(401).send({ error: "Token is required" });
-    return   
+    return;
   }
-  const token = validateToken(bearerHeader)
+  const token = validateToken(bearerHeader);
   if (token.error) {
     res.status(403).send({ error: token.error });
-    return
+    return;
   }
-  conn.getConnection(async function(err, connection) {
+  conn.getConnection(async function (err, connection) {
     if (err) throw err; // not connected!
     var sqlQuery = `
       INSERT INTO roles
@@ -139,31 +140,32 @@ async function addRole (req, res) {
           '${req.body.description}',
           '${req.body.is_admin}'
         )
-    `
-    connection.beginTransaction(function(err) {
-      if (err) { throw err; }
+    `;
+    connection.beginTransaction(function (err) {
+      if (err) {
+        throw err;
+      }
       connection.query(sqlQuery, function (error, results, fields) {
         if (error) {
-          return connection.rollback(function() {
-            res.send(error)
+          return connection.rollback(function () {
+            res.send(error);
             // throw error;
           });
         }
-        connection.commit(async function(err) {
+        connection.commit(async function (err) {
           if (err) {
-            return connection.rollback(function() {
-              res.send(err)
+            return connection.rollback(function () {
+              res.send(err);
               // throw err;
             });
           }
           res.send({
-            success: 'Role has been added'
-          })
+            success: "Role has been added",
+          });
         });
         connection.release();
-        if (error) 
-          res.send(error)
-          // throw error;
+        if (error) res.send(error);
+        // throw error;
       });
     });
   });

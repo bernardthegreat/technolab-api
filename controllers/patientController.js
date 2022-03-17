@@ -1,8 +1,8 @@
-const sqlConfig = require("../config/database")
-const mysql = require('mysql');
-const conn = mysql.createPool(sqlConfig.sqlCredentials)
+const sqlConfig = require("../config/database");
+const mysql = require("mysql");
+const conn = mysql.createPool(sqlConfig.sqlCredentials);
 const helpers = require("../helpers/helpers");
-const validateToken = require('../middleware/validateToken.js');
+const validateToken = require("../middleware/validateToken.js");
 // JSON FORMAT FOR UPDATING //
 // {
 //   "first_name": "Bernard",
@@ -37,26 +37,26 @@ const validateToken = require('../middleware/validateToken.js');
 // }
 // JSON FORMAT FOR ADDING //
 
-async function getAllPatients (req, res) {
-  const bearerHeader=req.headers["authorization"];
-  if (bearerHeader===undefined){
+async function getAllPatients(req, res) {
+  const bearerHeader = req.headers["authorization"];
+  if (bearerHeader === undefined) {
     res.status(401).send({ error: "Token is required" });
-    return   
+    return;
   }
-  const token = validateToken(bearerHeader)
+  const token = validateToken(bearerHeader);
   if (token.error) {
     res.status(403).send({ error: token.error });
-    return
+    return;
   }
-  conn.getConnection(function(err, connection) {
+  conn.getConnection(function (err, connection) {
     if (err) throw err; // not connected!
-    var sqlWhere = 'limit 500'
+    var sqlWhere = "limit 500";
     if (req.params.search) {
-      sqlWhere = `where (first_name = '${req.params.first_name}' or last_name = '${req.params.last_name}')`
+      sqlWhere = `where (first_name = '${req.params.first_name}' or last_name = '${req.params.last_name}')`;
     }
 
     if (req.params.patientNo) {
-      sqlWhere = `where patient_no = '${req.params.patientNo}'`
+      sqlWhere = `where patient_no = '${req.params.patientNo}'`;
     }
 
     var sqlQuery = `SELECT
@@ -79,31 +79,31 @@ async function getAllPatients (req, res) {
         remarks
       FROM patients
       ${sqlWhere}
-    `
+    `;
     connection.query(sqlQuery, function (error, results, fields) {
       if (results.length === 0) {
-        res.send({ message: 'Patient not found'})
-        return
+        res.send({ message: "Patient not found" });
+        return;
       }
-      res.send(results)
+      res.send(results);
       connection.release();
       if (error) throw error;
     });
   });
 }
 
-async function updatePatient (req, res) {
-  const bearerHeader=req.headers["authorization"];
-  if (bearerHeader===undefined){
+async function updatePatient(req, res) {
+  const bearerHeader = req.headers["authorization"];
+  if (bearerHeader === undefined) {
     res.status(401).send({ error: "Token is required" });
-    return   
+    return;
   }
-  const token = validateToken(bearerHeader)
+  const token = validateToken(bearerHeader);
   if (token.error) {
     res.status(403).send({ error: token.error });
-    return
+    return;
   }
-  conn.getConnection(function(err, connection) {
+  conn.getConnection(function (err, connection) {
     if (err) throw err; // not connected!
     var sqlQuery = `UPDATE patients SET
       first_name = '${req.body.first_name}',
@@ -121,52 +121,54 @@ async function updatePatient (req, res) {
       datetime_updated = CURRENT_TIMESTAMP
     where
       patient_no = '${req.body.patient_no}'
-    `
-    connection.beginTransaction(function(err) {
-      if (err) { throw err; }
+    `;
+    connection.beginTransaction(function (err) {
+      if (err) {
+        throw err;
+      }
       connection.query(sqlQuery, function (error, results, fields) {
         if (error) {
-          return connection.rollback(function() {
-            res.send(error)
+          return connection.rollback(function () {
+            res.send(error);
           });
         }
-        connection.commit(function(err) {
+        connection.commit(function (err) {
           if (err) {
-            return connection.rollback(function() {
-              res.send(err)
+            return connection.rollback(function () {
+              res.send(err);
               // throw err;
             });
           }
           res.send({
-            success: 'Patient has been updated'
-          })
+            success: "Patient has been updated",
+          });
         });
         connection.release();
-        if (error) 
+        if (error)
           // throw error;
-          res.send(error)
+          res.send(error);
       });
     });
   });
 }
 
-async function addPatient (req, res) {
-  const bearerHeader=req.headers["authorization"];
-  if (bearerHeader===undefined){
+async function addPatient(req, res) {
+  const bearerHeader = req.headers["authorization"];
+  if (bearerHeader === undefined) {
     res.status(401).send({ error: "Token is required" });
-    return   
+    return;
   }
-  const token = validateToken(bearerHeader)
+  const token = validateToken(bearerHeader);
   if (token.error) {
     res.status(403).send({ error: token.error });
-    return
+    return;
   }
-  conn.getConnection(async function(err, connection) {
+  conn.getConnection(async function (err, connection) {
     if (err) throw err; // not connect
-    let sqlSelect = `SELECT MAX(id) last_inserted_id FROM patients`
-    let generatedPatientID = ''
+    let sqlSelect = `SELECT MAX(id) last_inserted_id FROM patients`;
+    let generatedPatientID = "";
     connection.query(sqlSelect, async function (error, results, fields) {
-      generatedPatientID = await generatePatientID(results)
+      generatedPatientID = await generatePatientID(results);
       var sqlQuery = `
         INSERT INTO patients
           (
@@ -198,9 +200,11 @@ async function addPatient (req, res) {
             '${req.body.religion}',
             '${req.body.civil_status}'
           )
-      `
-      connection.beginTransaction(function(err) {
-        if (err) { throw err; }
+      `;
+      connection.beginTransaction(function (err) {
+        if (err) {
+          throw err;
+        }
         let sqlCheckDuplicate = `SELECT
           first_name,
           last_name,
@@ -209,52 +213,53 @@ async function addPatient (req, res) {
           where 
         first_name = '${req.body.first_name}'
         and last_name = '${req.body.last_name}'
-        and birthdate = '${req.body.birthdate}'`
+        and birthdate = '${req.body.birthdate}'`;
         connection.query(sqlCheckDuplicate, function (error, results, fields) {
           if (results.length > 0) {
-            res.status(403).send({ error: 'Patient already registered' });
-            return
+            res.status(403).send({ error: "Patient already registered" });
+            return;
           }
           connection.query(sqlQuery, function (error, results, fields) {
-            
             if (error) {
-              return connection.rollback(function() {
-                res.send(error)
+              return connection.rollback(function () {
+                res.send(error);
                 // throw error;
               });
             }
 
-            connection.commit(async function(err) {
+            connection.commit(async function (err) {
               if (err) {
-                return connection.rollback(function() {
-                  res.send(err)
+                return connection.rollback(function () {
+                  res.send(err);
                   // throw err;
                 });
               }
-            
+
               res.send({
-                success: 'Patient has been added'
-              })
+                success: "Patient has been added",
+              });
             });
-            
+
             connection.release();
-            if (error) 
-              res.send(error)
-              // throw error;
+            if (error) res.send(error);
+            // throw error;
           });
-        })
+        });
       });
       if (error) throw error;
-    })
+    });
   });
 }
 
-async function generatePatientID (lastInsertedID) {
-  const dateToday = new Date().toISOString().substr(0, 10).replaceAll('-', '')
-  let lastInsertedId = lastInsertedID[0].last_inserted_id === null ? 1 : lastInsertedID[0].last_inserted_id
-  let zeroFilledLastID = ('000000'+lastInsertedId).slice(-6);
-  let patientNumber = helpers.generateCheckDigit(dateToday, zeroFilledLastID)
-  return patientNumber
+async function generatePatientID(lastInsertedID) {
+  const dateToday = new Date().toISOString().substr(0, 10).replaceAll("-", "");
+  let lastInsertedId =
+    lastInsertedID[0].last_inserted_id === null
+      ? 1
+      : lastInsertedID[0].last_inserted_id;
+  let zeroFilledLastID = ("000000" + lastInsertedId).slice(-6);
+  let patientNumber = helpers.generateCheckDigit(dateToday, zeroFilledLastID);
+  return patientNumber;
 }
 
 module.exports = {

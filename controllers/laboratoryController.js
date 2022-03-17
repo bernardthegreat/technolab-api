@@ -1,7 +1,7 @@
-const sqlConfig = require("../config/database")
-const mysql = require('mysql');
-const conn = mysql.createPool(sqlConfig.sqlCredentials)
-const validateToken = require('../middleware/validateToken.js');
+const sqlConfig = require("../config/database");
+const mysql = require("mysql");
+const conn = mysql.createPool(sqlConfig.sqlCredentials);
+const validateToken = require("../middleware/validateToken.js");
 // JSON FORMAT FOR UPDATING //
 // {
 //   "laboratory_id": "1",
@@ -24,22 +24,22 @@ const validateToken = require('../middleware/validateToken.js');
 // }
 // JSON FORMAT FOR ADDING //
 
-async function getAllLaboratories (req, res) {
-  const bearerHeader=req.headers["authorization"];
-  if (bearerHeader===undefined){
+async function getAllLaboratories(req, res) {
+  const bearerHeader = req.headers["authorization"];
+  if (bearerHeader === undefined) {
     res.status(401).send({ error: "Token is required" });
-    return   
+    return;
   }
-  const token = validateToken(bearerHeader)
+  const token = validateToken(bearerHeader);
   if (token.error) {
     res.status(403).send({ error: token.error });
-    return
+    return;
   }
-  conn.getConnection(function(err, connection) {
+  conn.getConnection(function (err, connection) {
     if (err) throw err; // not connected!
-    var sqlWhere = ''
+    var sqlWhere = "";
     if (req.params.labName) {
-      sqlWhere = `where name = '${req.params.labName}'`
+      sqlWhere = `where name = '${req.params.labName}'`;
     }
     var sqlQuery = `SELECT
         id,
@@ -54,31 +54,31 @@ async function getAllLaboratories (req, res) {
         remarks
       FROM laboratories
       ${sqlWhere}
-    `
+    `;
     connection.query(sqlQuery, function (error, results, fields) {
       if (results.length === 0) {
-        res.send({ message: 'Laboratory not found'})
-        return
+        res.send({ message: "Laboratory not found" });
+        return;
       }
-      res.send(results)
+      res.send(results);
       connection.release();
       if (error) throw error;
     });
   });
 }
 
-async function updateLaboratory (req, res) {
-  const bearerHeader=req.headers["authorization"];
-  if (bearerHeader===undefined){
+async function updateLaboratory(req, res) {
+  const bearerHeader = req.headers["authorization"];
+  if (bearerHeader === undefined) {
     res.status(401).send({ error: "Token is required" });
-    return   
+    return;
   }
-  const token = validateToken(bearerHeader)
+  const token = validateToken(bearerHeader);
   if (token.error) {
     res.status(403).send({ error: token.error });
-    return
+    return;
   }
-  conn.getConnection(function(err, connection) {
+  conn.getConnection(function (err, connection) {
     if (err) throw err; // not connected!
     var sqlQuery = `UPDATE laboratories SET
       code = '${req.body.code}',
@@ -90,47 +90,49 @@ async function updateLaboratory (req, res) {
       datetime_updated = CURRENT_TIMESTAMP
     where
       id = '${req.body.laboratory_id}'
-    `
-    connection.beginTransaction(function(err) {
-      if (err) { throw err; }
+    `;
+    connection.beginTransaction(function (err) {
+      if (err) {
+        throw err;
+      }
       connection.query(sqlQuery, function (error, results, fields) {
         if (error) {
-          return connection.rollback(function() {
-            res.send(error)
+          return connection.rollback(function () {
+            res.send(error);
           });
         }
-        connection.commit(function(err) {
+        connection.commit(function (err) {
           if (err) {
-            return connection.rollback(function() {
-              res.send(err)
+            return connection.rollback(function () {
+              res.send(err);
               // throw err;
             });
           }
           res.send({
-            success: 'Laboratory has been updated'
-          })
+            success: "Laboratory has been updated",
+          });
         });
         connection.release();
-        if (error) 
+        if (error)
           // throw error;
-          res.send(error)
+          res.send(error);
       });
     });
   });
 }
 
-async function addLaboratory (req, res) {
-  const bearerHeader=req.headers["authorization"];
-  if (bearerHeader===undefined){
+async function addLaboratory(req, res) {
+  const bearerHeader = req.headers["authorization"];
+  if (bearerHeader === undefined) {
     res.status(401).send({ error: "Token is required" });
-    return   
+    return;
   }
-  const token = validateToken(bearerHeader)
+  const token = validateToken(bearerHeader);
   if (token.error) {
     res.status(403).send({ error: token.error });
-    return
+    return;
   }
-  conn.getConnection(async function(err, connection) {
+  conn.getConnection(async function (err, connection) {
     if (err) throw err; // not connected!
     var sqlQuery = `
       INSERT INTO laboratories 
@@ -149,31 +151,32 @@ async function addLaboratory (req, res) {
           '${req.body.address}',
           '${req.body.contact_number}'
         )
-    `
-    connection.beginTransaction(function(err) {
-      if (err) { throw err; }
+    `;
+    connection.beginTransaction(function (err) {
+      if (err) {
+        throw err;
+      }
       connection.query(sqlQuery, function (error, results, fields) {
         if (error) {
-          return connection.rollback(function() {
-            res.send(error)
+          return connection.rollback(function () {
+            res.send(error);
             // throw error;
           });
         }
-        connection.commit(async function(err) {
+        connection.commit(async function (err) {
           if (err) {
-            return connection.rollback(function() {
-              res.send(err)
+            return connection.rollback(function () {
+              res.send(err);
               // throw err;
             });
           }
           res.send({
-            success: 'Laboratory has been added'
-          })
+            success: "Laboratory has been added",
+          });
         });
         connection.release();
-        if (error) 
-          res.send(error)
-          // throw error;
+        if (error) res.send(error);
+        // throw error;
       });
     });
   });

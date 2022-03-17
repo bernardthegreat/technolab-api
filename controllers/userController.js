@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const salt = bcrypt.genSaltSync(saltRounds);
 const validateToken = require('../middleware/validateToken.js');
+const helpers = require("../helpers/helpers.js");
 // JSON FORMAT FOR ADDING //
 // {
 //   "username": "testestest",
@@ -46,6 +47,16 @@ async function getAllUsers (req, res) {
     res.status(403).send({ error: token.error });
     return
   }
+  const tokenDetails = {
+    token: bearerHeader,
+    status: 2
+  }
+  const tokenRedis = await helpers.checkRedisToken(tokenDetails);
+  if (tokenRedis.error) {
+    res.status(403).send({ error: tokenRedis.error });
+    return
+  }
+
   conn.getConnection(function(err, connection) {
     if (err) throw err; // not connected!
     var sqlWhere = ''

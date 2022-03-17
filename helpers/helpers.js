@@ -1,4 +1,5 @@
 const cdigit = require("cdigit");
+const redis = require("redis");
 // const cryptojs = require("crypto-js");
 // const btoa = require("btoa");
 // const atob = require("atob");
@@ -40,14 +41,62 @@ function decrypt(string) {
   return decrypted;
 }
 
-function generateCheckDigit (details, digit) {
+function generateCheckDigit(details, digit) {
   const generatedDigit = cdigit.luhn.generate(digit);
   const validatedDigit = cdigit.luhn.validate(generatedDigit);
   if (validatedDigit) {
-    const uniqueDigit = `${details}${generatedDigit}`
-    return uniqueDigit
+    const uniqueDigit = `${details}${generatedDigit}`;
+    return uniqueDigit;
   } else {
-    return false
+    return false;
+  }
+}
+
+async function checkRedisToken(tokenDetails) {
+  if (typeof tokenDetails === undefined) {
+    return {
+      error: "Token required",
+    };
+  }
+
+  var jwtToken = "";
+  if (tokenDetails.status === 1) {
+    jwtToken = tokenDetails.token.token;
+  } else {
+    const bearer = tokenDetails.token.split(" ");
+    jwtToken = bearer[1];
+  }
+  try {
+    const client = redis.createClient();
+    client.on("error", (err) => console.log("Redis Client Error", err));
+    await client.connect();
+    const result = await client.LRANGE("authToken", 0, 99999999);
+    if (result.indexOf(jwtToken) > -1) {
+      return {
+        error: "Invalid Token",
+      };
+    } else {
+      return {
+        success: "Token accepted",
+      };
+    }
+  } catch (err) {
+    return err;
+  }
+}
+
+async function addRedisToken(tokenDetails) {
+  try {
+    const client = redis.createClient();
+    await client.connect();
+    client.on("error", (err) => console.log("Redis Client Error", err));
+    const token = tokenDetails.split(" ")[1];
+    await client.lPush("authToken", token);
+    return true;
+  } catch (error) {
+    return {
+      error: error.toString(),
+    };
   }
 }
 
@@ -56,5 +105,7 @@ module.exports = {
   randomString,
   encrypt,
   decrypt,
-  generateCheckDigit
+  generateCheckDigit,
+  checkRedisToken,
+  addRedisToken,
 };

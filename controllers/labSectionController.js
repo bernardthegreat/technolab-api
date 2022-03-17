@@ -1,7 +1,7 @@
-const sqlConfig = require("../config/database")
-const mysql = require('mysql');
-const conn = mysql.createPool(sqlConfig.sqlCredentials)
-const validateToken = require('../middleware/validateToken.js');
+const sqlConfig = require("../config/database");
+const mysql = require("mysql");
+const conn = mysql.createPool(sqlConfig.sqlCredentials);
+const validateToken = require("../middleware/validateToken.js");
 // JSON FORMAT FOR UPDATING //
 // {
 //   "name": "Hematology",
@@ -17,22 +17,22 @@ const validateToken = require('../middleware/validateToken.js');
 // }
 // JSON FORMAT FOR ADDING //
 
-async function getAllSections (req, res) {
-  const bearerHeader=req.headers["authorization"];
-  if (bearerHeader===undefined){
+async function getAllSections(req, res) {
+  const bearerHeader = req.headers["authorization"];
+  if (bearerHeader === undefined) {
     res.status(401).send({ error: "Token is required" });
-    return   
+    return;
   }
-  const token = validateToken(bearerHeader)
+  const token = validateToken(bearerHeader);
   if (token.error) {
     res.status(403).send({ error: token.error });
-    return
+    return;
   }
-  conn.getConnection(function(err, connection) {
+  conn.getConnection(function (err, connection) {
     if (err) throw err; // not connected!
-    var sqlWhere = ''
+    var sqlWhere = "";
     if (req.params.sectionName) {
-      sqlWhere = `where name = '${req.params.sectionName}'`
+      sqlWhere = `where name = '${req.params.sectionName}'`;
     }
     var sqlQuery = `SELECT
         id,
@@ -44,31 +44,31 @@ async function getAllSections (req, res) {
         remarks
       FROM laboratory_sections
       ${sqlWhere}
-    `
+    `;
     connection.query(sqlQuery, function (error, results, fields) {
       if (results.length === 0) {
-        res.send({ message: 'Lab Section not found'})
-        return
+        res.send({ message: "Lab Section not found" });
+        return;
       }
-      res.send(results)
+      res.send(results);
       connection.release();
       if (error) throw error;
     });
   });
 }
 
-async function updateSection (req, res) {
-  const bearerHeader=req.headers["authorization"];
-  if (bearerHeader===undefined){
+async function updateSection(req, res) {
+  const bearerHeader = req.headers["authorization"];
+  if (bearerHeader === undefined) {
     res.status(401).send({ error: "Token is required" });
-    return   
+    return;
   }
-  const token = validateToken(bearerHeader)
+  const token = validateToken(bearerHeader);
   if (token.error) {
     res.status(403).send({ error: token.error });
-    return
+    return;
   }
-  conn.getConnection(function(err, connection) {
+  conn.getConnection(function (err, connection) {
     if (err) throw err; // not connected!
     var sqlQuery = `UPDATE laboratory_sections SET
       name = '${req.body.name}',
@@ -77,47 +77,49 @@ async function updateSection (req, res) {
       datetime_updated = CURRENT_TIMESTAMP
     where
       id = '${req.body.laboratory_section_id}'
-    `
-    connection.beginTransaction(function(err) {
-      if (err) { throw err; }
+    `;
+    connection.beginTransaction(function (err) {
+      if (err) {
+        throw err;
+      }
       connection.query(sqlQuery, function (error, results, fields) {
         if (error) {
-          return connection.rollback(function() {
-            res.send(error)
+          return connection.rollback(function () {
+            res.send(error);
           });
         }
-        connection.commit(function(err) {
+        connection.commit(function (err) {
           if (err) {
-            return connection.rollback(function() {
-              res.send(err)
+            return connection.rollback(function () {
+              res.send(err);
               // throw err;
             });
           }
           res.send({
-            success: 'Lab Section has been updated'
-          })
+            success: "Lab Section has been updated",
+          });
         });
         connection.release();
-        if (error) 
+        if (error)
           // throw error;
-          res.send(error)
+          res.send(error);
       });
     });
   });
 }
 
-async function addSection (req, res) {
-  const bearerHeader=req.headers["authorization"];
-  if (bearerHeader===undefined){
+async function addSection(req, res) {
+  const bearerHeader = req.headers["authorization"];
+  if (bearerHeader === undefined) {
     res.status(401).send({ error: "Token is required" });
-    return   
+    return;
   }
-  const token = validateToken(bearerHeader)
+  const token = validateToken(bearerHeader);
   if (token.error) {
     res.status(403).send({ error: token.error });
-    return
+    return;
   }
-  conn.getConnection(async function(err, connection) {
+  conn.getConnection(async function (err, connection) {
     if (err) throw err; // not connected!
     var sqlQuery = `
       INSERT INTO laboratory_sections 
@@ -130,31 +132,32 @@ async function addSection (req, res) {
           '${req.body.name}',
           '${req.body.description}'
         )
-    `
-    connection.beginTransaction(function(err) {
-      if (err) { throw err; }
+    `;
+    connection.beginTransaction(function (err) {
+      if (err) {
+        throw err;
+      }
       connection.query(sqlQuery, function (error, results, fields) {
         if (error) {
-          return connection.rollback(function() {
-            res.send(error)
+          return connection.rollback(function () {
+            res.send(error);
             // throw error;
           });
         }
-        connection.commit(async function(err) {
+        connection.commit(async function (err) {
           if (err) {
-            return connection.rollback(function() {
-              res.send(err)
+            return connection.rollback(function () {
+              res.send(err);
               // throw err;
             });
           }
           res.send({
-            success: 'Lab Section has been added'
-          })
+            success: "Lab Section has been added",
+          });
         });
         connection.release();
-        if (error) 
-          res.send(error)
-          // throw error;
+        if (error) res.send(error);
+        // throw error;
       });
     });
   });
