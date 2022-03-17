@@ -30,7 +30,7 @@ async function getAllRoles(req, res) {
   }
 
   conn.getConnection(function (err, connection) {
-    if (err) throw err; // not connected!
+    if (err) return res.status(401).send(err); // not connected!
     var sqlWhere = "";
     if (req.params.name) {
       sqlWhere = `where name = '${req.params.name}'`;
@@ -54,7 +54,7 @@ async function getAllRoles(req, res) {
       }
       res.send(results);
       connection.release();
-      if (error) throw error;
+      if (error) return res.status(401).send(error);
     });
   });
 }
@@ -68,7 +68,7 @@ async function updateRole(req, res) {
     return
   }
   conn.getConnection(function (err, connection) {
-    if (err) throw err; // not connected!
+    if (err) return res.status(401).send(err); // not connected!
     var sqlQuery = `UPDATE roles SET
       name = '${req.body.name}',
       description = '${req.body.description}',
@@ -80,7 +80,7 @@ async function updateRole(req, res) {
     `;
     connection.beginTransaction(function (err) {
       if (err) {
-        throw err;
+        return res.status(401).send(err);
       }
       connection.query(sqlQuery, function (error, results, fields) {
         if (error) {
@@ -92,7 +92,7 @@ async function updateRole(req, res) {
           if (err) {
             return connection.rollback(function () {
               res.send(err);
-              // throw err;
+              // return res.status(401).send(err);
             });
           }
           res.send({
@@ -101,7 +101,7 @@ async function updateRole(req, res) {
         });
         connection.release();
         if (error)
-          // throw error;
+          // return res.status(401).send(err)or;
           res.send(error);
       });
     });
@@ -117,7 +117,7 @@ async function addRole(req, res) {
     return
   }
   conn.getConnection(async function (err, connection) {
-    if (err) throw err; // not connected!
+    if (err) return res.status(401).send(err); // not connected!
     var sqlQuery = `
       INSERT INTO roles
         (
@@ -134,20 +134,20 @@ async function addRole(req, res) {
     `;
     connection.beginTransaction(function (err) {
       if (err) {
-        throw err;
+        return res.status(401).send(err);
       }
       connection.query(sqlQuery, function (error, results, fields) {
         if (error) {
           return connection.rollback(function () {
             res.send(error);
-            // throw error;
+            // return res.status(401).send(err)or;
           });
         }
         connection.commit(async function (err) {
           if (err) {
             return connection.rollback(function () {
               res.send(err);
-              // throw err;
+              // return res.status(401).send(err);
             });
           }
           res.send({
@@ -156,7 +156,7 @@ async function addRole(req, res) {
         });
         connection.release();
         if (error) res.send(error);
-        // throw error;
+        // return res.status(401).send(err)or;
       });
     });
   });
