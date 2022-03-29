@@ -264,7 +264,7 @@ async function updateUserRole(connection, userDetails) {
     var sqlInsertRole = `
       UPDATE user_roles SET
         role_id = '${userDetails.role_id}',
-        laboratory_section_id = ${userDetails.laboratory_section_id},
+        laboratory_section_id = ${userDetails.laboratory_section_id === '' ? null : userDetails.laboratory_section_id },
         datetime_updated = CURRENT_TIMESTAMP
       WHERE
         user_id = '${userDetails.user_id}'
