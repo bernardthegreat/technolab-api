@@ -54,9 +54,12 @@ async function authenticate(req, res) {
         token: jwtToken,
         status: 1,
       };
-      console.log(tokenDetails);
+      
       const tokenRedis = await helpers.checkRedisToken(tokenDetails);
-      console.log(tokenRedis);
+      if (tokenRedis.error) {
+        return tokenRedis.error
+      }
+      await helpers.cacheUserCredentials(results)
       const userAuthDetails = {
         token: jwtToken,
         userDetails: results,
@@ -66,6 +69,22 @@ async function authenticate(req, res) {
       if (error) return error;
     });
   });
+}
+
+async function getCachedUserCredentials (req, res) {
+  const validate = await helpers.validateTokenizations(
+    req.headers["authorization"]
+  );
+  if (validate.error) {
+    res.status(validate.type).send({ error: validate.error });
+    return;
+  }
+  const cachedUserCredentials = await helpers.getCachedCredentials(req.params.userKey);
+  if (cachedUserCredentials) {
+    res.status(200).send(cachedUserCredentials)
+  } else {
+    res.status(403).send({ error: cachedUserCredentials });
+  }
 }
 
 async function verifyHash(password, hashPassword) {
@@ -114,5 +133,6 @@ async function logout(req, res) {
 
 module.exports = {
   authenticate,
+  getCachedUserCredentials,
   logout,
 };

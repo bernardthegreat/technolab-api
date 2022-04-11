@@ -100,6 +100,37 @@ async function addRedisToken(tokenDetails) {
   }
 }
 
+async function cacheUserCredentials(userCredentials) {
+  try {
+    const client = redis.createClient();
+    await client.connect();
+    await client.setEx(userCredentials[0].username, 3600, JSON.stringify(userCredentials))
+    client.on("error", (err) => console.log("Redis Client Error", err));
+    return true
+  } catch (error) {
+    return {
+      error: error.toString(),
+    };
+  }
+}
+
+async function getCachedCredentials (userKey) {
+  try {
+    const client = redis.createClient();
+    await client.connect();
+    const cachedUser = await client.get(userKey)
+    client.on("error", (err) => console.log("Redis Client Error", err));
+    return {
+      success: true,
+      userDetails: JSON.parse(cachedUser)
+    }
+  } catch (error) {
+    return {
+      error: error.toString(),
+    };
+  }
+}
+
 async function validateTokenizations(tokenBearer) {
   const bearerHeader = tokenBearer;
   if (bearerHeader === undefined) {
@@ -168,5 +199,7 @@ module.exports = {
   generateCheckDigit,
   checkRedisToken,
   addRedisToken,
-  validateTokenizations
+  validateTokenizations,
+  cacheUserCredentials,
+  getCachedCredentials
 };

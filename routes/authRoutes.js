@@ -7,6 +7,7 @@ const router = Router();
 // router.post('/login', authController.login);
 // router.post('/authenticate', authController.authenticate);
 // router.post('/validate-token', authController.validateToken)
+router.get("/user-credentials/:userKey", authController.getCachedUserCredentials)
 
 router.post("/authenticate", authController.authenticate);
 router.post("/logout", authController.logout);
